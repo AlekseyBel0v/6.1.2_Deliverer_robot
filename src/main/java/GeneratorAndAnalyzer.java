@@ -46,6 +46,7 @@ public class GeneratorAndAnalyzer {
                     System.out.println("Путь: " + rout + "; Количество \"" + Main.LETTER_FOR_ANALYSIS + "\" = " + quantity);
                 }
                 stateOfMap.isUpdate = true;
+                stateOfMap.notify();
             }
         }
     }
