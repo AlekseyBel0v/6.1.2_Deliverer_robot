@@ -8,19 +8,29 @@ public class Main {
     static final int LENGTHS_OF_THE_ROUT = 100;             // длина пути
     static final char LETTER_FOR_ANALYSIS = 'R';            // на эту букву будет проанализирован путь
     static Thread currentHigh = new Thread(() -> {
-        while (true) {
-            while (!GeneratorAndAnalyzer.mapIsUpdated) {
-            }
-            synchronized (GeneratorAndAnalyzer.sizeToFreq) {
-                getMax();
-                GeneratorAndAnalyzer.mapIsUpdated = false;
-                GeneratorAndAnalyzer.sizeToFreq.notify();
+        synchronized (GeneratorAndAnalyzer.stateOfMap) {
+            while (true) {
+                if (GeneratorAndAnalyzer.stateOfMap.isUpdate) {
+                    synchronized (GeneratorAndAnalyzer.sizeToFreq) {
+                        printMax();
+                    }
+                    GeneratorAndAnalyzer.stateOfMap.isUpdate = false;
+                } else {
+                    GeneratorAndAnalyzer.stateOfMap.notify();
+                    try {
+                        GeneratorAndAnalyzer.stateOfMap.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     });
 
     public static void main(String[] args) {
         currentHigh.setDaemon(true);
+        currentHigh.start();
+
         final List<Thread> analyzers = new ArrayList<>();
         ThreadGroup threads = new ThreadGroup("threads");
         for (int i = 0; i < QUANTITY_OF_ROUTS_VARIANTS; i++) {
@@ -31,8 +41,6 @@ public class Main {
             analyzers.get(i).start();
         }
 
-        currentHigh.start();
-
         while (threads.activeCount() > 0) {
         }
         System.out.println("Другие размеры:");
@@ -41,7 +49,7 @@ public class Main {
         }
     }
 
-    static void getMax() {
+    static void printMax() {
         Map.Entry<Integer, Integer> entryMax = null;
         for (Map.Entry<Integer, Integer> entry : GeneratorAndAnalyzer.sizeToFreq.entrySet()) {
             if (entryMax == null) {
